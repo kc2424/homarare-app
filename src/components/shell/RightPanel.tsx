@@ -25,7 +25,7 @@ export function RightPanel({ refreshKey }: { refreshKey: number }) {
   }, [refreshKey]);
 
   return (
-    <aside className="hidden xl:block w-[350px] shrink-0 sticky top-0 h-screen overflow-y-auto py-3 pl-8">
+    <aside className="hidden min-[1360px]:block w-[350px] shrink-0 sticky top-0 h-screen overflow-y-auto py-3 pl-8">
       <section className="rounded-2xl bg-bg-hover p-4">
         <h2 className="text-post font-bold text-text-primary">これまでの記録</h2>
         <dl className="mt-3 flex flex-col gap-3">
