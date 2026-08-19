@@ -1,26 +1,68 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #ffffff;
+  --bg-hover: #f7f9f9;
+  --bg-overlay: rgba(0, 0, 0, 0.4);
+  --border: #eff3f4;
+  --border-strong: #cfd9de;
+  --text-primary: #0f1419;
+  --text-secondary: #536471;
+  --text-on-accent: #ffffff;
+
+  --accent: #1d9bf0;
+  --accent-hover: #1a8cd8;
+  --accent-subtle: rgba(29, 155, 240, 0.1);
+
+  --like: #f91880;
+  --like-subtle: rgba(249, 24, 128, 0.1);
+  --spread: #00ba7c;
+  --spread-subtle: rgba(0, 186, 124, 0.1);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-hover: var(--bg-hover);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-like: var(--like);
+  --color-like-subtle: var(--like-subtle);
+  --color-spread: var(--spread);
+  --color-spread-subtle: var(--spread-subtle);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", Meiryo,
+    sans-serif;
+
+  --text-post: 17px;
+  --text-post--line-height: 24px;
+  --text-body: 15px;
+  --text-body--line-height: 20px;
+  --text-meta: 13px;
+  --text-meta--line-height: 16px;
+  --text-compose: 20px;
+  --text-compose--line-height: 24px;
+  --text-metric-hero: 32px;
+  --text-metric-hero--line-height: 36px;
+  --text-metric-sub: 20px;
+  --text-metric-sub--line-height: 24px;
+
+  --max-width-column: 600px;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
 }
