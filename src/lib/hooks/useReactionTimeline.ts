@@ -5,6 +5,7 @@ import gsap from "gsap";
 import type { ReactionScenario } from "@/types/scenario";
 import {
   prefersReducedMotion,
+  targetsToLiveMetrics,
   ZERO_METRICS,
   type LiveMetrics,
 } from "./metrics";
@@ -23,6 +24,7 @@ export function useReactionTimeline({
   const [metrics, setMetrics] = useState<LiveMetrics>(ZERO_METRICS);
   const [visibleReplyIds, setVisibleReplyIds] = useState<string[]>([]);
   const [showTrendBadge, setShowTrendBadge] = useState(false);
+  const [heartsActive, setHeartsActive] = useState(false);
   const postCardRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<gsap.core.Timeline | null>(null);
   const onCompleteRef = useRef(onComplete);
@@ -38,9 +40,10 @@ export function useReactionTimeline({
     setMetrics(ZERO_METRICS);
     setVisibleReplyIds([]);
     setShowTrendBadge(false);
+    setHeartsActive(false);
 
     if (reducedMotion) {
-      setMetrics(targets);
+      setMetrics(targetsToLiveMetrics(targets));
       setVisibleReplyIds(scenario.items.map((item) => item.id));
       setShowTrendBadge(true);
       onCompleteRef.current();
@@ -98,6 +101,7 @@ export function useReactionTimeline({
         vibrateInterval = window.setInterval(() => navigator.vibrate(30), 120);
       }
     }, [], 3.5);
+    tl.call(() => setHeartsActive(true), [], 3.5);
 
     tl.to(
       counters,
@@ -115,6 +119,7 @@ export function useReactionTimeline({
         yells: Math.floor(targets.yells * 0.9),
         spreads: Math.floor(targets.spreads * 0.9),
         replyCount: Math.floor(targets.replyCount * 0.9),
+        bookmarks: Math.floor(targets.bookmarks * 0.9),
         duration: 4.5,
         ease: "power3.in",
         onUpdate: syncMetrics,
@@ -126,6 +131,7 @@ export function useReactionTimeline({
         window.clearInterval(vibrateInterval);
       }
     }, [], 8);
+    tl.call(() => setHeartsActive(false), [], 8);
 
     // Phase D (8.0–12.0s): 余韻。残り 10% をゆっくり詰める
     tl.to(
@@ -135,6 +141,7 @@ export function useReactionTimeline({
         yells: targets.yells,
         spreads: targets.spreads,
         replyCount: targets.replyCount,
+        bookmarks: targets.bookmarks,
         duration: 4,
         ease: "power3.out",
         onUpdate: syncMetrics,
@@ -171,6 +178,7 @@ export function useReactionTimeline({
     metrics,
     visibleReplyIds,
     showTrendBadge,
+    heartsActive,
     postCardRef,
   };
 }

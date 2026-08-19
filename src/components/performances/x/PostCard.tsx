@@ -2,7 +2,6 @@ import { forwardRef } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import type { LiveMetrics } from "@/lib/hooks/metrics";
 import { ActionBar } from "./ActionBar";
-import { MetricBar } from "./MetricBar";
 import { TimestampLine } from "./TimestampLine";
 
 interface PostCardProps {
@@ -20,9 +19,9 @@ export const PostCard = forwardRef<HTMLElement, PostCardProps>(
       >
         <div className="px-4 py-3">
           <div className="flex gap-3">
-            <Avatar name="あなた" personaId="user" size={48} />
+            <Avatar name="あなた" personaId="user" size={40} />
             <div className="min-w-0 flex-1">
-              <div className="flex items-center gap-1">
+              <div className="flex flex-col leading-5">
                 <span className="text-body font-bold text-text-primary">
                   あなた
                 </span>
@@ -40,12 +39,16 @@ export const PostCard = forwardRef<HTMLElement, PostCardProps>(
             </div>
           </div>
 
-          <div className="mt-2 border-t border-border">
-            <MetricBar metrics={metrics} />
-          </div>
-
-          <div className="border-t border-border pt-1">
-            <ActionBar />
+          <div className="mt-2 border-t border-border pt-1">
+            <ActionBar
+              variant="post"
+              counts={{
+                reply: metrics.replyCount,
+                repost: metrics.spreads,
+                like: metrics.yells,
+                bookmark: metrics.bookmarks,
+              }}
+            />
           </div>
         </div>
       </article>

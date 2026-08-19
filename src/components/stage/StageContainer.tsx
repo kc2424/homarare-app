@@ -1,14 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { ReactionScenario, StageState } from "@/types/scenario";
+import type { HistoryEntry, ReactionScenario, StageState } from "@/types/scenario";
+import { saveEntry } from "@/lib/history/storage";
 import { buildScenario } from "@/lib/scenario/buildScenario";
-import { ZERO_METRICS } from "@/lib/hooks/metrics";
+import { ZERO_METRICS, targetsToLiveMetrics } from "@/lib/hooks/metrics";
 import {
   animatePostCardEntrance,
   useReactionTimeline,
 } from "@/lib/hooks/useReactionTimeline";
 import { useZombieAutoTranslate } from "@/lib/hooks/useZombieAutoTranslate";
+import { HistoryOverlay } from "@/components/history/HistoryOverlay";
 import { XPerformance } from "@/components/performances/x/XPerformance";
 import { Header } from "./Header";
 import { DeedComposer } from "./DeedComposer";
@@ -20,13 +22,15 @@ export function StageContainer() {
   const [scenario, setScenario] = useState<ReactionScenario | null>(null);
   const [postedAt, setPostedAt] = useState<Date | null>(null);
   const [isComposerVisible, setIsComposerVisible] = useState(true);
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const performanceRef = useRef<HTMLDivElement>(null);
+  const hasSavedHistoryRef = useRef(false);
 
   const handleReactingComplete = useCallback(() => {
     setState("settled");
   }, []);
 
-  const { metrics, visibleReplyIds, showTrendBadge, postCardRef } =
+  const { metrics, visibleReplyIds, showTrendBadge, heartsActive, postCardRef } =
     useReactionTimeline({
       scenario,
       active: state === "reacting",
@@ -55,6 +59,7 @@ export function StageContainer() {
     const nextScenario = buildScenario(trimmed);
     setScenario(nextScenario);
     setPostedAt(new Date());
+    hasSavedHistoryRef.current = false;
     setState("posting");
     setIsComposerVisible(false);
   };
@@ -63,9 +68,20 @@ export function StageContainer() {
     setDeed("");
     setScenario(null);
     setPostedAt(null);
+    hasSavedHistoryRef.current = false;
     setIsComposerVisible(true);
     setState("idle");
   };
+
+  const handleReplay = useCallback((entry: HistoryEntry) => {
+    setIsHistoryOpen(false);
+    setScenario(entry.scenario);
+    setPostedAt(new Date(entry.postedAt));
+    setDeed(entry.scenario.deed);
+    setIsComposerVisible(false);
+    hasSavedHistoryRef.current = true;
+    setState("posting");
+  }, []);
 
   useEffect(() => {
     if (state !== "posting" || !scenario) return;
@@ -77,6 +93,15 @@ export function StageContainer() {
     return () => cancelAnimationFrame(frame);
   }, [state, scenario, postCardRef]);
 
+  useEffect(() => {
+    if (state !== "settled" || !scenario || !postedAt || hasSavedHistoryRef.current) {
+      return;
+    }
+
+    hasSavedHistoryRef.current = true;
+    saveEntry(scenario, postedAt);
+  }, [state, scenario, postedAt]);
+
   const showComposer =
     isComposerVisible && (state === "idle" || state === "composing");
   const showPerformance =
@@ -87,12 +112,7 @@ export function StageContainer() {
     state === "posting"
       ? ZERO_METRICS
       : state === "settled" && scenario
-        ? {
-            yells: scenario.targets.yells,
-            spreads: scenario.targets.spreads,
-            replyCount: scenario.targets.replyCount,
-            impressions: scenario.targets.impressions,
-          }
+        ? targetsToLiveMetrics(scenario.targets)
         : metrics;
 
   const performanceVisibleReplyIds =
@@ -105,10 +125,12 @@ export function StageContainer() {
   const performanceShowTrendBadge =
     state === "posting" ? false : state === "settled" ? true : showTrendBadge;
 
+  const performanceHeartsActive = state === "reacting" ? heartsActive : false;
+
   return (
     <div className="min-h-screen bg-bg-primary">
       <div className="mx-auto w-full max-w-column min-h-screen border-x border-border">
-        <Header />
+        <Header onHistoryClick={() => setIsHistoryOpen(true)} />
 
         {showComposer && (
           <DeedComposer
@@ -125,6 +147,7 @@ export function StageContainer() {
               metrics={performanceMetrics}
               visibleReplyIds={performanceVisibleReplyIds}
               showTrendBadge={performanceShowTrendBadge}
+              heartsActive={performanceHeartsActive}
               autoOpenZombieIds={autoOpenZombieIds}
               postCardRef={postCardRef}
               postedAt={postedAt ?? undefined}
@@ -134,6 +157,13 @@ export function StageContainer() {
 
         {state === "settled" && <ResultActions onRetry={handleRetry} />}
       </div>
+
+      {isHistoryOpen && (
+        <HistoryOverlay
+          onClose={() => setIsHistoryOpen(false)}
+          onReplay={handleReplay}
+        />
+      )}
     </div>
   );
 }

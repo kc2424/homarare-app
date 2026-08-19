@@ -13,12 +13,6 @@ export function ResultActions({ onRetry }: ResultActionsProps) {
       <div className="flex flex-col gap-3">
         <button
           type="button"
-          className="h-9 px-4 rounded-full bg-accent text-text-on-accent text-body font-bold hover:bg-accent-hover transition-colors duration-150"
-        >
-          保存する
-        </button>
-        <button
-          type="button"
           onClick={onRetry}
           className="h-9 px-4 rounded-full border border-border-strong text-body font-bold text-text-primary hover:bg-bg-hover transition-colors duration-150"
         >

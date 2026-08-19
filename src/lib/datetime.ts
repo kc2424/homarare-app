@@ -10,3 +10,16 @@ export function formatPostTimestamp(date = new Date()): string {
 
   return `${period}${hour12}:${minutes} · ${year}年${month}月${day}日`;
 }
+
+/** 履歴一覧用（例: 8月20日 午後10:23） */
+export function formatHistoryTimestamp(isoString: string): string {
+  const date = new Date(isoString);
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const period = hours < 12 ? "午前" : "午後";
+  const hour12 = hours % 12 || 12;
+
+  return `${month}月${day}日 ${period}${hour12}:${minutes}`;
+}

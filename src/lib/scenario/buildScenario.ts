@@ -4,6 +4,7 @@ import type {
   PersonaId,
   ReactionItem,
   ReactionScenario,
+  ReplyAuthor,
 } from "@/types/scenario";
 import {
   LIKE_RANGES,
@@ -40,6 +41,8 @@ const PHASE_D_START = 8000;
 const PRO_PHASE_C_LATE_START = 6000;
 const ZOMBIE_CLUSTER_START = 8500;
 const TOTAL_DURATION_MS = 12000;
+/** リプライ同士の最低間隔。これを割ると2枚同時に出て演出が潰れる */
+const MIN_REPLY_GAP_MS = 300;
 
 function expandTemplate(template: string, deed: string): string {
   const normalized = deed.replace(/\n/g, " ");
@@ -48,17 +51,39 @@ function expandTemplate(template: string, deed: string): string {
   return template.replaceAll("{{deed}}", trimmed);
 }
 
+function toReplyAuthor(persona: Persona): ReplyAuthor {
+  return {
+    id: persona.id,
+    displayName: persona.displayName,
+    handle: persona.handle,
+    avatarSrc: persona.avatarSrc,
+    verified: persona.verified,
+  };
+}
+
 function generateMetricTargets(): MetricTargets {
   const yells = randInt(8_000, 24_000);
-  const engageRate = randFloat(0.006, 0.015);
+  const engageRate = randFloat(0.004, 0.015);
   const impressions = Math.round(yells / engageRate);
   const spreads = Math.round(yells * randFloat(0.015, 0.06));
   const replyCount = Math.max(
     30,
     Math.round(yells * randFloat(0.005, 0.025))
   );
+  const bookmarks = Math.round(yells * randFloat(0.08, 0.15));
 
-  return { yells, impressions, spreads, replyCount };
+  return { yells, impressions, spreads, replyCount, bookmarks };
+}
+
+function deriveReplyItemMetrics(
+  likeCount: number,
+  parentImpressions: number
+): Pick<ReactionItem, "repostCount" | "replyCount" | "impressionCount"> {
+  return {
+    repostCount: Math.round(likeCount * randFloat(0.06, 0.09)),
+    replyCount: Math.round(likeCount * randFloat(0.001, 0.005)),
+    impressionCount: Math.round(parentImpressions * randFloat(0.08, 0.15)),
+  };
 }
 
 function selectRegularPersonaIds(count: number): RegularPersonaId[] {
@@ -176,19 +201,22 @@ function assignAppearTimes(items: DraftItem[]): void {
     item.appearAt = randomInRange(min, max);
   }
 
+  // 時刻順に走査し、直前のリプライから最低間隔を確保する。
+  // 単調増加で詰めるので、この1パスで同時刻・順序逆転が起きない。
   const sortedNormals = [...normals].sort(
     (a, b) => (a.appearAt ?? 0) - (b.appearAt ?? 0)
   );
   for (let index = 1; index < sortedNormals.length; index++) {
     const prev = sortedNormals[index - 1];
     const current = sortedNormals[index];
-    if ((current.appearAt ?? 0) < (prev.appearAt ?? 0) + 300) {
-      const [min, max] = PHASE_CONSTRAINTS[current.persona.id];
-      current.appearAt = Math.min(
-        max,
-        Math.max(min, (prev.appearAt ?? 0) + randInt(300, 600))
-      );
-    }
+    const earliest = (prev.appearAt ?? 0) + MIN_REPLY_GAP_MS;
+    if ((current.appearAt ?? 0) >= earliest) continue;
+
+    const [, max] = PHASE_CONSTRAINTS[current.persona.id];
+    const desired = (prev.appearAt ?? 0) + randInt(MIN_REPLY_GAP_MS, 600);
+    // フェーズ上限に張り付く場合は、上限を超えてでも最低間隔を優先する。
+    // 同時に2枚出るほうが演出としての損失が大きいため。
+    current.appearAt = Math.max(earliest, Math.min(max, desired));
   }
 }
 
@@ -197,8 +225,14 @@ function createReactionId(index: number): string {
 }
 
 export function buildScenario(deed: string): ReactionScenario {
+  const targets = generateMetricTargets();
   const displayReplyCount = randInt(8, 12);
-  const zombieCount = randInt(2, 3);
+  // 表示リプライ数はゾンビを含む内数。ただし1周目で6人格を一巡させるため、
+  // 通常人格を最低6件確保し、ゾンビ数は残り枠に収まるよう切り詰める。
+  const zombieCount = Math.min(
+    randInt(2, 3),
+    displayReplyCount - REGULAR_PERSONA_IDS.length
+  );
   const regularCount = displayReplyCount - zombieCount;
 
   const regularPersonaIds = selectRegularPersonaIds(regularCount);
@@ -243,20 +277,26 @@ export function buildScenario(deed: string): ReactionScenario {
 
   drafts.sort((a, b) => (a.appearAt ?? 0) - (b.appearAt ?? 0));
 
-  const items: ReactionItem[] = drafts.map((draft, index) => ({
-    id: createReactionId(index),
-    persona: draft.persona,
-    body: draft.body,
-    appearAt: draft.appearAt ?? 0,
-    likeCount: likeCountFor(draft.persona.id),
-    lang: draft.lang,
-    ...(draft.translation ? { translation: draft.translation } : {}),
-  }));
+  const items: ReactionItem[] = drafts.map((draft, index) => {
+    const likeCount = likeCountFor(draft.persona.id);
+    const replyMetrics = deriveReplyItemMetrics(likeCount, targets.impressions);
+
+    return {
+      id: createReactionId(index),
+      persona: toReplyAuthor(draft.persona),
+      body: draft.body,
+      appearAt: draft.appearAt ?? 0,
+      likeCount,
+      lang: draft.lang,
+      ...replyMetrics,
+      ...(draft.translation ? { translation: draft.translation } : {}),
+    };
+  });
 
   return {
     kind: "x",
     deed,
-    targets: generateMetricTargets(),
+    targets,
     items,
     totalDurationMs: TOTAL_DURATION_MS,
     trendLabel: pickOne(TREND_LABELS),

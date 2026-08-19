@@ -6,6 +6,7 @@ import { BadgeCheck } from "lucide-react";
 import type { ReactionItem } from "@/types/scenario";
 import { Avatar } from "@/components/ui/Avatar";
 import { prefersReducedMotion } from "@/lib/hooks/metrics";
+import { ActionBar } from "./ActionBar";
 import { TranslateToggle } from "./TranslateToggle";
 
 interface ReplyCardProps {
@@ -14,7 +15,7 @@ interface ReplyCardProps {
 }
 
 export function ReplyCard({ item, autoOpenTranslation = false }: ReplyCardProps) {
-  const { persona, body, likeCount, lang } = item;
+  const { persona, body, lang } = item;
   const cardRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -41,10 +42,11 @@ export function ReplyCard({ item, autoOpenTranslation = false }: ReplyCardProps)
       <Avatar
         name={persona.displayName}
         personaId={persona.id}
+        src={persona.avatarSrc}
         size={40}
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1 min-w-0">
+        <div className="flex items-center gap-1 min-w-0 flex-wrap">
           <span className="text-body font-bold text-text-primary truncate">
             {persona.displayName}
           </span>
@@ -57,6 +59,7 @@ export function ReplyCard({ item, autoOpenTranslation = false }: ReplyCardProps)
           <span className="text-body text-text-secondary truncate">
             {persona.handle}
           </span>
+          <span className="text-body text-text-secondary shrink-0">· 今</span>
         </div>
 
         {lang === "ar" ? (
@@ -78,11 +81,15 @@ export function ReplyCard({ item, autoOpenTranslation = false }: ReplyCardProps)
           </p>
         )}
 
-        <div className="mt-3 flex items-center gap-1 text-meta text-text-secondary">
-          <span className="tabular-nums">
-            ♡ {likeCount.toLocaleString("en-US")}
-          </span>
-        </div>
+        <ActionBar
+          variant="reply"
+          counts={{
+            reply: item.replyCount,
+            repost: item.repostCount,
+            like: item.likeCount,
+            impression: item.impressionCount,
+          }}
+        />
       </div>
     </article>
   );

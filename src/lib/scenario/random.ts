@@ -8,13 +8,6 @@ export function randFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
-/** 配列から min〜max の範囲でランダムに1要素を返す */
-export function pickFromRange<T>(items: T[], min: number, max: number): T {
-  const count = randInt(min, Math.min(max, items.length));
-  const shuffled = shuffle([...items]);
-  return shuffled[count - 1];
-}
-
 /** Fisher-Yates シャッフル */
 export function shuffle<T>(items: T[]): T[] {
   const result = [...items];

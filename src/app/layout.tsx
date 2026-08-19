@@ -1,9 +1,18 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+// TODO: Vercel 本番ドメイン確定後に metadataBase を差し替える
 export const metadata: Metadata = {
+  metadataBase: new URL("http://localhost:3000"),
   title: "ほめられ",
-  description: "やったことを一言入れるだけで、複数の人格から一斉に褒められる",
+  description: "やったことを書くだけで、みんなが褒めてくれる",
+  openGraph: {
+    title: "ほめられ",
+    description: "やったことを書くだけで、みんなが褒めてくれる",
+    images: ["/ogp.png"],
+    type: "website",
+  },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({
