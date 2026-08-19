@@ -97,7 +97,7 @@ export function DeedComposer({
   };
 
   return (
-    <div className="flex flex-col min-h-[calc(100vh-53px)]">
+    <div className="flex flex-col min-h-[calc(100vh-53px)] lg:min-h-screen">
       <div className="flex justify-end px-4 py-2 shrink-0">
         <button
           type="button"

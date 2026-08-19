@@ -17,6 +17,8 @@ import {
 } from "@/lib/hooks/useReactionTimeline";
 import { useZombieAutoTranslate } from "@/lib/hooks/useZombieAutoTranslate";
 import { HistoryOverlay } from "@/components/history/HistoryOverlay";
+import { LeftNav } from "@/components/shell/LeftNav";
+import { RightPanel } from "@/components/shell/RightPanel";
 import { XPerformance } from "@/components/performances/x/XPerformance";
 import { Header } from "./Header";
 import { DeedComposer } from "./DeedComposer";
@@ -33,6 +35,8 @@ export function StageContainer() {
   const [isComposerVisible, setIsComposerVisible] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [hasEntered, setHasEntered] = useState(false);
+  /** 右パネルの集計を投稿後に取り直すための世代カウンタ */
+  const [statsKey, setStatsKey] = useState(0);
   const performanceRef = useRef<HTMLDivElement>(null);
   const hasSavedHistoryRef = useRef(false);
 
@@ -82,6 +86,14 @@ export function StageContainer() {
     clearLastEntryPointer();
     setIsComposerVisible(true);
     setState("idle");
+  };
+
+  const handleStartNewPost = () => {
+    handleRetry();
+    // 入力欄がマウントされてからフォーカスする
+    window.setTimeout(() => {
+      document.querySelector("textarea")?.focus();
+    }, 0);
   };
 
   const handleReplay = useCallback((entry: HistoryEntry) => {
@@ -139,6 +151,7 @@ export function StageContainer() {
     if (entryId) {
       saveLastEntryPointer(entryId);
     }
+    setStatsKey((key) => key + 1);
   }, [state, scenario, postedAt]);
 
   const showComposer =
@@ -171,8 +184,18 @@ export function StageContainer() {
   return (
     <div className="min-h-screen bg-bg-primary">
       {showIntro && <IntroScreen onStart={() => setHasEntered(true)} />}
-      <div className="mx-auto w-full max-w-column min-h-screen border-x border-border">
-        <Header onHistoryClick={() => setIsHistoryOpen(true)} />
+      <div className="mx-auto flex w-full max-w-[1265px] justify-center">
+        <LeftNav
+          onHome={handleStartNewPost}
+          onHistory={() => setIsHistoryOpen(true)}
+          onPost={handleStartNewPost}
+        />
+
+        <main className="w-full max-w-column min-h-screen border-x border-border">
+          {/* PCではロゴも履歴も左ナビにあるため、中央のヘッダーは出さない */}
+          <div className="lg:hidden">
+            <Header onHistoryClick={() => setIsHistoryOpen(true)} />
+          </div>
 
         {showComposer && (
           <DeedComposer
@@ -204,6 +227,9 @@ export function StageContainer() {
             onRetry={handleRetry}
           />
         )}
+        </main>
+
+        <RightPanel refreshKey={statsKey} />
       </div>
 
       {isHistoryOpen && (
