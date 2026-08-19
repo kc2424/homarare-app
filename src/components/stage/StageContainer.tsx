@@ -2,7 +2,13 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { HistoryEntry, ReactionScenario, StageState } from "@/types/scenario";
-import { saveEntry } from "@/lib/history/storage";
+import {
+  clearLastEntryPointer,
+  loadHistory,
+  loadLastEntryPointer,
+  saveEntry,
+  saveLastEntryPointer,
+} from "@/lib/history/storage";
 import { buildScenario } from "@/lib/scenario/buildScenario";
 import { ZERO_METRICS, targetsToLiveMetrics } from "@/lib/hooks/metrics";
 import {
@@ -16,6 +22,8 @@ import { Header } from "./Header";
 import { DeedComposer } from "./DeedComposer";
 import { ResultActions } from "./ResultActions";
 
+const RESTORE_WINDOW_MS = 30 * 60 * 1000;
+
 export function StageContainer() {
   const [state, setState] = useState<StageState>("idle");
   const [deed, setDeed] = useState("");
@@ -23,6 +31,7 @@ export function StageContainer() {
   const [postedAt, setPostedAt] = useState<Date | null>(null);
   const [isComposerVisible, setIsComposerVisible] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [showFirstTimeHint, setShowFirstTimeHint] = useState(false);
   const performanceRef = useRef<HTMLDivElement>(null);
   const hasSavedHistoryRef = useRef(false);
 
@@ -69,6 +78,7 @@ export function StageContainer() {
     setScenario(null);
     setPostedAt(null);
     hasSavedHistoryRef.current = false;
+    clearLastEntryPointer();
     setIsComposerVisible(true);
     setState("idle");
   };
@@ -84,6 +94,34 @@ export function StageContainer() {
   }, []);
 
   useEffect(() => {
+    setShowFirstTimeHint(loadHistory().length === 0);
+  }, []);
+
+  useEffect(() => {
+    const pointer = loadLastEntryPointer();
+    if (!pointer) return;
+
+    const elapsed = Date.now() - new Date(pointer.savedAt).getTime();
+    if (elapsed > RESTORE_WINDOW_MS) {
+      clearLastEntryPointer();
+      return;
+    }
+
+    const entry = loadHistory().find((item) => item.id === pointer.entryId);
+    if (!entry) {
+      clearLastEntryPointer();
+      return;
+    }
+
+    setScenario(entry.scenario);
+    setPostedAt(new Date(entry.postedAt));
+    setDeed(entry.scenario.deed);
+    setIsComposerVisible(false);
+    hasSavedHistoryRef.current = true;
+    setState("settled");
+  }, []);
+
+  useEffect(() => {
     if (state !== "posting" || !scenario) return;
 
     const frame = requestAnimationFrame(() => {
@@ -94,12 +132,15 @@ export function StageContainer() {
   }, [state, scenario, postCardRef]);
 
   useEffect(() => {
-    if (state !== "settled" || !scenario || !postedAt || hasSavedHistoryRef.current) {
+    if (state !== "posting" || !scenario || !postedAt || hasSavedHistoryRef.current) {
       return;
     }
 
     hasSavedHistoryRef.current = true;
-    saveEntry(scenario, postedAt);
+    const entryId = saveEntry(scenario, postedAt);
+    if (entryId) {
+      saveLastEntryPointer(entryId);
+    }
   }, [state, scenario, postedAt]);
 
   const showComposer =
@@ -137,6 +178,7 @@ export function StageContainer() {
             value={deed}
             onChange={handleDeedChange}
             onSubmit={handleSubmit}
+            showFirstTimeHint={showFirstTimeHint}
           />
         )}
 
@@ -155,7 +197,13 @@ export function StageContainer() {
           </div>
         )}
 
-        {state === "settled" && <ResultActions onRetry={handleRetry} />}
+        {state === "settled" && scenario && (
+          <ResultActions
+            deed={scenario.deed}
+            yells={scenario.targets.yells}
+            onRetry={handleRetry}
+          />
+        )}
       </div>
 
       {isHistoryOpen && (

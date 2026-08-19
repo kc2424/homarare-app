@@ -7,8 +7,14 @@ import type {
 } from "@/types/scenario";
 
 const KEY = "homarare:history:v1";
+const LAST_KEY = "homarare:last:v1";
 const MAX_ENTRIES = 50;
 const STORE_VERSION = 1 as const;
+
+interface LastEntryPointer {
+  entryId: string;
+  savedAt: string;
+}
 
 function isBrowser(): boolean {
   return typeof window !== "undefined";
@@ -126,10 +132,27 @@ function isHistoryStore(value: unknown): value is HistoryStore {
   );
 }
 
+function isLastEntryPointer(value: unknown): value is LastEntryPointer {
+  if (!value || typeof value !== "object") return false;
+  const pointer = value as Record<string, unknown>;
+  return (
+    typeof pointer.entryId === "string" && typeof pointer.savedAt === "string"
+  );
+}
+
 function discardCorruptedStore(): void {
   if (!isBrowser()) return;
   try {
     localStorage.removeItem(KEY);
+  } catch {
+    // localStorage 自体が使えない場合は握りつぶす
+  }
+}
+
+function discardCorruptedLastPointer(): void {
+  if (!isBrowser()) return;
+  try {
+    localStorage.removeItem(LAST_KEY);
   } catch {
     // localStorage 自体が使えない場合は握りつぶす
   }
@@ -187,11 +210,14 @@ export function loadHistory(): HistoryEntry[] {
   return readStore()?.entries ?? [];
 }
 
-export function saveEntry(scenario: ReactionScenario, postedAt: Date): void {
-  if (!isBrowser()) return;
+export function saveEntry(
+  scenario: ReactionScenario,
+  postedAt: Date
+): string | null {
+  if (!isBrowser()) return null;
 
   // 履歴の保存失敗でアプリを止めない（06_投稿履歴_実装仕様.md 4章）。
-  // ここは演出が完走した直後に呼ばれるため、例外を通すと最悪の位置で画面が壊れる。
+  // posting 開始時に呼ばれるため、例外を通すと演出の起点で画面が壊れる。
   try {
     const store = readStore() ?? { version: STORE_VERSION, entries: [] };
     const entry: HistoryEntry = {
@@ -206,8 +232,10 @@ export function saveEntry(scenario: ReactionScenario, postedAt: Date): void {
     }
 
     writeStore(store);
+    return entry.id;
   } catch {
     // 保存できなくても演出体験は成立する
+    return null;
   }
 }
 
@@ -225,4 +253,42 @@ export function removeEntry(id: string): void {
 
 export function clearHistory(): void {
   discardCorruptedStore();
+}
+
+export function saveLastEntryPointer(entryId: string): void {
+  if (!isBrowser()) return;
+
+  try {
+    const pointer: LastEntryPointer = {
+      entryId,
+      savedAt: new Date().toISOString(),
+    };
+    localStorage.setItem(LAST_KEY, JSON.stringify(pointer));
+  } catch {
+    // 目印の保存失敗でアプリを止めない
+  }
+}
+
+export function loadLastEntryPointer(): LastEntryPointer | null {
+  if (!isBrowser()) return null;
+
+  try {
+    const raw = localStorage.getItem(LAST_KEY);
+    if (!raw) return null;
+
+    const parsed: unknown = JSON.parse(raw);
+    if (!isLastEntryPointer(parsed)) {
+      discardCorruptedLastPointer();
+      return null;
+    }
+
+    return parsed;
+  } catch {
+    discardCorruptedLastPointer();
+    return null;
+  }
+}
+
+export function clearLastEntryPointer(): void {
+  discardCorruptedLastPointer();
 }

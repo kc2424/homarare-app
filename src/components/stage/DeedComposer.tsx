@@ -13,6 +13,7 @@ interface DeedComposerProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
+  showFirstTimeHint?: boolean;
 }
 
 function CharCountRing({ length }: { length: number }) {
@@ -82,7 +83,12 @@ function CharCountRing({ length }: { length: number }) {
   );
 }
 
-export function DeedComposer({ value, onChange, onSubmit }: DeedComposerProps) {
+export function DeedComposer({
+  value,
+  onChange,
+  onSubmit,
+  showFirstTimeHint = false,
+}: DeedComposerProps) {
   const trimmedLength = value.trim().length;
   const canSubmit = trimmedLength > 0 && value.length <= MAX_LENGTH;
 
@@ -109,14 +115,21 @@ export function DeedComposer({ value, onChange, onSubmit }: DeedComposerProps) {
           空白部分をタップしてもフォーカスが当たらない（本家は伸びる）。
           高さは h-full（height:100%）ではなく flex の stretch で出すこと。
           パーセント指定は親の高さを解決できず、textarea 既定の2行に落ちる。 */}
-      <div className="flex flex-1 gap-3 px-4 pt-3 min-h-0">
-        <Avatar name="あなた" personaId="user" size={40} />
-        <textarea
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          placeholder="今日やったことを書いてみよう"
-          className="flex-1 min-w-0 self-stretch resize-none border-none outline-none bg-transparent text-compose text-text-primary placeholder:text-text-secondary"
-        />
+      <div className="flex flex-1 flex-col gap-2 px-4 pt-3 min-h-0">
+        <div className="flex flex-1 gap-3 min-h-0">
+          <Avatar name="あなた" personaId="user" size={40} />
+          <textarea
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="今日やったことを書いてみよう"
+            className="flex-1 min-w-0 self-stretch resize-none border-none outline-none bg-transparent text-compose text-text-primary placeholder:text-text-secondary"
+          />
+        </div>
+        {showFirstTimeHint && (
+          <p className="pl-[52px] text-meta text-text-secondary">
+            書くと、Yのみんなが一斉に褒めてくれます。
+          </p>
+        )}
       </div>
 
       <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-border bg-bg-primary shrink-0">
