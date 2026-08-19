@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ほめられ
 
-## Getting Started
+やったことを一言入れるだけで、疑似SNS上で複数の人格から一斉に褒められるアプリ。
+演出(音・カウントアップ・褒めリプライ)込みで気持ちよさを最大化する。
 
-First, run the development server:
+- **アプリ名**: ほめられ
+- **アプリ内の疑似SNS名**: Y
+
+## 設計ドキュメント
+
+すべて `docs/` 配下にある。
+
+| ファイル | 内容 |
+|---|---|
+| [01_要件定義.md](docs/01_要件定義.md) | 企画全体の要件定義。背景・コアループ・MVPスコープ・ロードマップ |
+| [02_X型演出_実装仕様.md](docs/02_X型演出_実装仕様.md) | Phase 0で作るX型演出の実装仕様。状態機械・タイムライン・型定義・ファイル構成 |
+| [03_デザイントークン.md](docs/03_デザイントークン.md) | 配色・タイポグラフィ・余白などのデザイン定義 |
+| [04_褒めセリフ集.md](docs/04_褒めセリフ集.md) | 人格別の褒めリプライ全文(インプレゾンビ含む) |
+| [05_アセット方針.md](docs/05_アセット方針.md) | アバター・ロゴ・OGPの調達方法と画像生成モデルの選定 |
+| [06_投稿履歴_実装仕様.md](docs/06_投稿履歴_実装仕様.md) | 過去のポストを端末内に保存し、一覧・再生する機能の仕様 |
+
+> **これらのmdファイルは実装の唯一の正とする。**
+> 数値レンジ・比率・セリフの文言を実装側で勝手に変更しないこと。
+> 仕様を変えたい場合は、先にmdを更新してから実装する。
+
+## 役割分担
+
+- **Claude Code** — 企画・設計・仕様策定
+- **Cursor** — 実装
+
+## 技術スタック
+
+- Next.js 15 (App Router) / TypeScript
+- Tailwind CSS
+- GSAP(アニメーション)
+- デプロイ: Vercel
+
+## 開発
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run dev       # 開発サーバー起動 (http://localhost:3000)
+npm run build     # 本番ビルド
+npm run scenario  # buildScenario の出力を確認（UIなしで検証用）
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 現在のフェーズ
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Phase 0** — X型演出1本に絞って作り込み、バズ検証を行う。
+LINE型・Instagram型はPhase 1で追加する。
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 実装ステップ
 
-## Learn More
+| Step | 内容 | 状態 |
+|---|---|---|
+| 1 | 型定義とシナリオ生成(`lib/scenario/`) | 実装中 |
+| 2 | 静的UI(演出なし) | 未着手 |
+| 3 | GSAPタイムライン接続 | 未着手 |
+| 4 | ハート演出・トレンドバッジ | 未着手 |
+| 5 | 音の実装 | 未着手 |
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 注意
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+`create-next-app` を再実行するとこのREADMEが上書きされる。
+2026-08-20 に一度発生済み。設計資料を `docs/` に退避したのはこれが理由。
