@@ -192,10 +192,10 @@ export function StageContainer() {
         />
 
         <main className="w-full max-w-column min-h-screen border-x border-border">
-          {/* PCではロゴも履歴も左ナビにあるため、中央のヘッダーは出さない */}
-          <div className="lg:hidden">
-            <Header onHistoryClick={() => setIsHistoryOpen(true)} />
-          </div>
+          <Header
+            onHistoryClick={() => setIsHistoryOpen(true)}
+            title={state === "idle" || state === "composing" ? "ホーム" : "ポスト"}
+          />
 
         {showComposer && (
           <DeedComposer
