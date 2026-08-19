@@ -13,6 +13,8 @@
   --accent: #1d9bf0;
   --accent-hover: #1a8cd8;
   --accent-subtle: rgba(29, 155, 240, 0.1);
+  --accent-disabled: #8ecdf8;
+  --warning: #ffd400;
 
   --like: #f91880;
   --like-subtle: rgba(249, 24, 128, 0.1);
@@ -31,6 +33,8 @@
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
   --color-accent-subtle: var(--accent-subtle);
+  --color-accent-disabled: var(--accent-disabled);
+  --color-warning: var(--warning);
   --color-like: var(--like);
   --color-like-subtle: var(--like-subtle);
   --color-spread: var(--spread);
@@ -65,4 +69,44 @@ body {
 
 .tabular-nums {
   font-variant-numeric: tabular-nums;
+}
+
+/* ---- 操作感（03_デザイントークン.md 7-2章）----
+   モバイルブラウザの既定挙動を殺さないと、何を足しても反応が鈍く見える。 */
+button,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button {
+  /* ダブルタップズーム判定の待ち時間（約300ms）を消す */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* :not(:disabled) を付けて Tailwind の transition ユーティリティより
+   詳細度を高くしている。色の補間もここでまとめて面倒を見る。 */
+button:not(:disabled) {
+  transition:
+    transform 100ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+button:not(:disabled):active {
+  transform: scale(0.96);
+}
+
+textarea {
+  caret-color: var(--accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:not(:disabled) {
+    transition: background-color 150ms ease-out, color 150ms ease-out;
+  }
+  button:not(:disabled):active {
+    transform: none;
+  }
 }
