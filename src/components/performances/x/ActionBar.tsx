@@ -42,14 +42,17 @@ function ActionButton({
   hoverClass,
   countStyle = "default",
   compact = false,
+  widthClass = "",
 }: {
   icon: typeof MessageCircle;
   label: string;
   count?: number;
   hoverClass: string;
   countStyle?: CountStyle;
-  /** リプライ行は要素が6個あり、34pxのままだと数値が折り返す（03 4-2章） */
+  /** リプライ行は要素が多く、34pxのままだと数値が折り返す（03 4-2章） */
   compact?: boolean;
+  /** 列幅を固定して、行をまたいでアイコンのx座標を揃えるためのクラス */
+  widthClass?: string;
 }) {
   const showCount = count !== undefined && count > 0;
   const countClassName =
@@ -62,7 +65,7 @@ function ActionButton({
     <button
       type="button"
       aria-label={label}
-      className="flex items-center gap-0.5 text-text-secondary shrink-0"
+      className={`flex items-center gap-0.5 text-text-secondary shrink-0 ${widthClass}`}
     >
       <span
         className={`${boxClassName} rounded-full flex items-center justify-center transition-colors duration-150 ${hoverClass}`}
@@ -101,13 +104,17 @@ function IconOnlyButton({
 export function ActionBar({ variant, counts }: ActionBarProps) {
   if (variant === "reply") {
     return (
-      <div className="mt-3 flex w-full items-center justify-between">
+      /* 列幅を固定する。justify-between だと各行の数値の桁数で配置が変わり、
+         行をまたいだときにアイコンの縦の列が揃わない（03_デザイントークン.md 4-2章）。
+         幅は各指標の最大桁から決めている（返信2桁 / ひろめる3桁 / エール4桁）。 */
+      <div className="mt-3 flex w-full items-center">
         <ActionButton
           icon={MessageCircle}
           label="リプライ"
           count={counts?.reply}
           hoverClass={HOVER.reply}
           compact
+          widthClass="w-12"
         />
         <ActionButton
           icon={Repeat2}
@@ -115,6 +122,7 @@ export function ActionBar({ variant, counts }: ActionBarProps) {
           count={counts?.repost}
           hoverClass={HOVER.repost}
           compact
+          widthClass="w-14"
         />
         <ActionButton
           icon={Heart}
@@ -122,6 +130,7 @@ export function ActionBar({ variant, counts }: ActionBarProps) {
           count={counts?.like}
           hoverClass={HOVER.like}
           compact
+          widthClass="w-[68px]"
         />
         <ActionButton
           icon={BarChart3}
@@ -129,6 +138,7 @@ export function ActionBar({ variant, counts }: ActionBarProps) {
           count={counts?.impression}
           hoverClass={HOVER.impression}
           compact
+          widthClass="flex-1"
         />
         {/* リプライ行に保存アイコンは置かない。本文カラムがアバター分だけ狭く、
             6要素だと 360px 級の端末で数値がはみ出す（03_デザイントークン.md 4-2章）。

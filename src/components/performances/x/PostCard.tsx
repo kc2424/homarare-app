@@ -15,7 +15,7 @@ export const PostCard = forwardRef<HTMLElement, PostCardProps>(
     return (
       <article
         ref={ref}
-        className="sticky top-[53px] z-40 bg-bg-primary border-b border-border"
+        className="bg-bg-primary border-b border-border"
       >
         <div className="px-4 py-3">
           <div className="flex gap-3">
