@@ -110,3 +110,32 @@ textarea {
     transform: none;
   }
 }
+
+/* ---- 待機画面（03_デザイントークン.md 4-4章）----
+   GSAPを使わずCSSで完結させる。静止画面に演出エンジンを持ち込む必要がない。 */
+.intro-fade {
+  animation: intro-fade-in 600ms ease-out both;
+}
+.intro-fade-delay-1 {
+  animation-delay: 120ms;
+}
+.intro-fade-delay-2 {
+  animation-delay: 280ms;
+}
+
+@keyframes intro-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-fade {
+    animation: none;
+  }
+}

@@ -20,6 +20,7 @@ import { HistoryOverlay } from "@/components/history/HistoryOverlay";
 import { XPerformance } from "@/components/performances/x/XPerformance";
 import { Header } from "./Header";
 import { DeedComposer } from "./DeedComposer";
+import { IntroScreen } from "./IntroScreen";
 import { ResultActions } from "./ResultActions";
 
 const RESTORE_WINDOW_MS = 30 * 60 * 1000;
@@ -31,7 +32,7 @@ export function StageContainer() {
   const [postedAt, setPostedAt] = useState<Date | null>(null);
   const [isComposerVisible, setIsComposerVisible] = useState(true);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [showFirstTimeHint, setShowFirstTimeHint] = useState(false);
+  const [hasEntered, setHasEntered] = useState(false);
   const performanceRef = useRef<HTMLDivElement>(null);
   const hasSavedHistoryRef = useRef(false);
 
@@ -94,10 +95,6 @@ export function StageContainer() {
   }, []);
 
   useEffect(() => {
-    setShowFirstTimeHint(loadHistory().length === 0);
-  }, []);
-
-  useEffect(() => {
     const pointer = loadLastEntryPointer();
     if (!pointer) return;
 
@@ -118,6 +115,7 @@ export function StageContainer() {
     setDeed(entry.scenario.deed);
     setIsComposerVisible(false);
     hasSavedHistoryRef.current = true;
+    setHasEntered(true);
     setState("settled");
   }, []);
 
@@ -168,8 +166,11 @@ export function StageContainer() {
 
   const performanceHeartsActive = state === "reacting" ? heartsActive : false;
 
+  const showIntro = !hasEntered && !scenario && state === "idle";
+
   return (
     <div className="min-h-screen bg-bg-primary">
+      {showIntro && <IntroScreen onStart={() => setHasEntered(true)} />}
       <div className="mx-auto w-full max-w-column min-h-screen border-x border-border">
         <Header onHistoryClick={() => setIsHistoryOpen(true)} />
 
@@ -178,7 +179,6 @@ export function StageContainer() {
             value={deed}
             onChange={handleDeedChange}
             onSubmit={handleSubmit}
-            showFirstTimeHint={showFirstTimeHint}
           />
         )}
 

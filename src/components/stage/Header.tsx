@@ -1,5 +1,5 @@
 import { History } from "lucide-react";
-import { YLogo } from "@/components/icons/YLogo";
+import { HLogo } from "@/components/icons/HLogo";
 
 interface HeaderProps {
   onHistoryClick: () => void;
@@ -9,7 +9,7 @@ export function Header({ onHistoryClick }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 h-[53px] border-b border-border bg-bg-primary flex items-center justify-between px-4">
       <div className="w-[34px] shrink-0" aria-hidden />
-      <YLogo className="text-text-primary" />
+      <HLogo className="text-text-primary" />
       <button
         type="button"
         onClick={onHistoryClick}

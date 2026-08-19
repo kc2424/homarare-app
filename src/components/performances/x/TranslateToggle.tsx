@@ -28,7 +28,7 @@ export function TranslateToggle({
         </button>
       ) : (
         <div className="pt-2 border-t border-border">
-          <p className="text-meta text-text-secondary">Yが翻訳しました</p>
+          <p className="text-meta text-text-secondary">Hが翻訳しました</p>
           <p className="mt-1 text-body text-text-primary">{translation}</p>
         </div>
       )}

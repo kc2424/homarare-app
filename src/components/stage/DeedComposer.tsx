@@ -13,7 +13,6 @@ interface DeedComposerProps {
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
-  showFirstTimeHint?: boolean;
 }
 
 function CharCountRing({ length }: { length: number }) {
@@ -87,7 +86,6 @@ export function DeedComposer({
   value,
   onChange,
   onSubmit,
-  showFirstTimeHint = false,
 }: DeedComposerProps) {
   const trimmedLength = value.trim().length;
   const canSubmit = trimmedLength > 0 && value.length <= MAX_LENGTH;
@@ -125,11 +123,6 @@ export function DeedComposer({
             className="flex-1 min-w-0 self-stretch resize-none border-none outline-none bg-transparent text-compose text-text-primary placeholder:text-text-secondary"
           />
         </div>
-        {showFirstTimeHint && (
-          <p className="pl-[52px] text-meta text-text-secondary">
-            書くと、Yのみんなが一斉に褒めてくれます。
-          </p>
-        )}
       </div>
 
       <div className="flex items-center justify-between gap-4 px-4 py-3 border-t border-border bg-bg-primary shrink-0">
